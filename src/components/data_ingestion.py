@@ -6,7 +6,8 @@ from dataclasses import dataclass
 
 from src.exception import CustomException
 from src.logger import logging
-
+from src.components.data_transformation import DataTransformation
+from src.components.data_transformation import DataTransformationConfig
 
 @dataclass
 class DataIngestionConfig:
@@ -22,7 +23,6 @@ class DataIngestion:
     def initiate_data_ingestion(self):
         logging.info("Entered the data ingestion method or component")
         try:
-            # Ensure input file exists
             input_path = 'notebook/data/stud.csv'
             if not os.path.exists(input_path):
                 raise FileNotFoundError(f"{input_path} not found.")
@@ -30,7 +30,6 @@ class DataIngestion:
             df = pd.read_csv(input_path)
             logging.info('Read the dataset as dataframe')
 
-            # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(self.ingestion_config.train_data_path), exist_ok=True)
 
             df.to_csv(self.ingestion_config.raw_data_path, index=False, header=True)
@@ -50,7 +49,12 @@ class DataIngestion:
 
         except Exception as e:
             logging.error("Error occurred during data ingestion")
-            raise CustomException(e, sys)
+            raise CustomException(e, sys.exc_info())
+
+
 if __name__ == "__main__":
     ingestion = DataIngestion()
-    ingestion.initiate_data_ingestion()
+    train_data, test_data = ingestion.initiate_data_ingestion()
+
+    data_transformation = DataTransformation()
+    data_transformation.initiate_data_transformation(train_data, test_data)
